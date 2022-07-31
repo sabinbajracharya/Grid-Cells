@@ -60,9 +60,9 @@ namespace gridcells
 
         public void Plot()
         {
-            var plt = new ScottPlot.Plot(800, 600);
-            plt.AddScatter(txx.ToArray(), tyy.ToArray());
-            plt.SaveFig("quickstart.png");
+            //var plt = new ScottPlot.Plot(800, 600);
+            //plt.AddScatter(txx.ToArray(), tyy.ToArray());
+            //plt.SaveFig("quickstart.png");
         }
     }
 }

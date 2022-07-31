@@ -12,3 +12,9 @@ Console.WriteLine(conv.Item2);
 
 spatial.RandomNavigation(100);
 spatial.Plot();
+
+var complex = new System.Numerics.Complex(1, 22);
+
+var grid = new Grid();
+
+Console.WriteLine(complex.ToString());
