@@ -96,8 +96,8 @@ namespace gridcells
                     for (int l = 0; aaa2Abs.size < nn; l++)
                     {
                         if (aaa2Abs[k, l] < aaa1Abs[k, l]) {
-                            distMatAbs[k, l] = aaa2Abs[l, l];
-                            distMatImg[k, l] = aaa2Img[l, l];
+                            distMatAbs[k, l] = aaa2Abs[k, l];
+                            distMatImg[k, l] = aaa2Img[k, l];
                         }
                     }
                 }
