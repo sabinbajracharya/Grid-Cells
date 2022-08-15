@@ -12,11 +12,13 @@ namespace gridcells
         private readonly double ii;
         private readonly double sigma;
         private readonly double sigma2;
+        private readonly double tt;
         private readonly double[] gridGain;
         private readonly int gridLayers;
 
         private NDArray gridActivity;
         private Tuple<NDArray, NDArray> distTri;
+        private Complex speedVector;
 
 
         public Grid()
@@ -27,6 +29,7 @@ namespace gridcells
             ii = 0.3;
             sigma = 0.24;
             sigma2 = Math.Pow(sigma, 2);
+            tt = 0.05;
             gridGain = new double[] { 0.04, 0.05, 0.06, 0.07, 0.08 };
             gridLayers = gridGain.Length;
 
@@ -35,6 +38,38 @@ namespace gridcells
             distTri = buildTopology(mm, nn);
         }
 
+        public void update(Complex speedVector) {
+            this.speedVector = speedVector;
+
+            for (int jj = 0; jj < gridLayers; jj++)
+            {
+                var rrr = new Complex(gridGain[jj], 0);
+                //var matWeights = updateWeight(self.distTri, rrr);
+            }
+        }
+
+        public Tuple<NDArray, NDArray> updateWeight(Tuple<NDArray, NDArray> topology, Complex rrr) {
+
+            var topologyAbs = topology.Item1;
+            var topologyImg = topology.Item2;
+
+            var matWeightsAbs = np.ndarray((topologyAbs.size, topologyAbs.size));
+            var matWeightsImg = np.ndarray((topologyImg.size, topologyImg.size));
+
+            for (int i = 0; i < matWeightsAbs.size; i++)
+            {
+                for (int j = 0; j < matWeightsAbs.size; j++)
+                {
+                    var mult = Complex.Multiply(rrr, this.speedVector);
+
+                    matWeightsAbs[i, j] = this.ii + np.exp(Math.Pow(-Math.Abs(topologyAbs[i, j] - mult.Real), 2) / this.sigma2) - this.tt;
+                    matWeightsImg[i, j] = this.ii + np.exp(Math.Pow(-Math.Abs(topologyImg[i, j] - mult.Imaginary), 2) / this.sigma2) - this.tt;
+                    
+                }
+            }
+            return Tuple.Create(matWeightsAbs, matWeightsImg);
+        }
+        
 
         private Tuple<NDArray, NDArray> buildTopology(int mm, int nn)
         {
@@ -108,5 +143,7 @@ namespace gridcells
 
         }
     }
+
+
 }
 
