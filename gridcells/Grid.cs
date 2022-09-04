@@ -44,45 +44,49 @@ namespace gridcells
             for (int jj = 0; jj < gridLayers; jj++)
             {
                 var rrr = new Complex(gridGain[jj], 0);
-                var matWeights = updateWeight(this.distTri, rrr);
+                NDArray matWeights = updateWeight(this.distTri, rrr);
 
                 // self.grid_activity[:,:,jj] == In 3d array, get all fro outer 2 array but get only the item in the jj index
                 // so, 3d becomes 2d array
                 // and ravel flatten 2d to 1d of size (400)
                 //    this.gridActivity.GetNDArrays
-                //    var activityVect = np.ravel(this.gridActivity[:,:, jj]);
+                //    var activityVect = np.ravel(this.gridActivity[:,:, jj
+                var activityVect = np.ravel(gridActivity[Slice.All, Slice.All, jj]);
+
+                // update  the activityVect by the matWeights
+                activityVect = Bfunc(activityVect, matWeights);
+
                 Console.WriteLine("sabin");
             }
         }
 
-        public Tuple<NDArray, NDArray> updateWeight(Tuple<NDArray, NDArray> topology, Complex rrr) {
+        public NDArray updateWeight(Tuple<NDArray, NDArray> topology, Complex rrr) {
 
             var topologyAbs = topology.Item1;
             var topologyImg = topology.Item2;
 
-            var matWeightsAbs = np.ndarray(topologyAbs.shape);
-            var matWeightsImg = np.ndarray(topologyImg.shape);
+            NDArray matWeights = np.ndarray(topologyAbs.shape);
 
-            for (int i = 0; i < matWeightsAbs.shape[0]; i++)
+            for (int i = 0; i < matWeights.shape[0]; i++)
             {
-                for (int j = 0; j < matWeightsAbs.shape[1]; j++)
+                for (int j = 0; j < matWeights.shape[1]; j++)
                 {
                     var mult = Complex.Multiply(rrr, this.speedVector);
+                    var abs = new Complex (Math.Pow(topologyAbs[i, j] - mult.Real, 2), Math.Pow(topologyAbs[i, j] - mult.Imaginary, 2)).Magnitude;
 
-                    matWeightsAbs[i, j] = this.ii + np.exp(Math.Pow(-Math.Abs(topologyAbs[i, j] - mult.Real), 2) / this.sigma2) - this.tt;
-                    matWeightsImg[i, j] = this.ii + np.exp(Math.Pow(-Math.Abs(topologyImg[i, j] - mult.Imaginary), 2) / this.sigma2) - this.tt;
-                    
+                    matWeights[i, j] = this.ii + np.exp(abs / this.sigma2) - this.tt;
                 }
             }
-            return Tuple.Create(matWeightsAbs, matWeightsImg);
+            return matWeights;
         }
 
 
         /// Perform matrix multiplaction of the activity with weight
-        //void Bfunc(activity, Tuple<NDArray, NDArray> matWeights) {  //Eq 1
-        //    activity += np.dot(activity, matWeights);
-        //    //return activity
-        //}
+        NDArray Bfunc(NDArray activity, NDArray matWeights)
+        {  //Eq 1
+            activity += np.dot(activity, matWeights);
+            return activity;
+        }
 
 
         private Tuple<NDArray, NDArray> buildTopology(int mm, int nn)
