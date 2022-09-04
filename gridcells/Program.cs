@@ -10,11 +10,12 @@ var conv = spatial.Conv(45);
 Console.WriteLine(conv.Item1);
 Console.WriteLine(conv.Item2);
 
-spatial.RandomNavigation(100);
+spatial.RandomNavigation(3);
 spatial.Plot();
 
-var complex = new System.Numerics.Complex(1, 22);
 
 var grid = new Grid();
+var simulation = new Simulation(grid, spatial.txx, spatial.tyy);
+simulation.run();
 
-Console.WriteLine(complex.ToString());
+Console.WriteLine("End");

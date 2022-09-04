@@ -6,17 +6,22 @@ namespace gridcells
 {
     public class Grid
     {
-        private readonly int mm;
-        private readonly int nn;
+        public readonly int mm;
+        public readonly int nn;
         private readonly double tao;
         private readonly double ii;
         private readonly double sigma;
         private readonly double sigma2;
         private readonly double tt;
         private readonly double[] gridGain;
-        private readonly int gridLayers;
+        public readonly int gridLayers;
 
         private NDArray gridActivity;
+
+        public NDArray GridActivity
+        {
+            get { return gridActivity; }
+        }
         private Tuple<NDArray, NDArray> distTri;
         private Complex speedVector;
 
@@ -38,6 +43,8 @@ namespace gridcells
             distTri = buildTopology(mm, nn);
         }
 
+        
+
         public void update(Complex speedVector) {
             this.speedVector = speedVector;
 
@@ -49,14 +56,20 @@ namespace gridcells
                 // self.grid_activity[:,:,jj] == In 3d array, get all fro outer 2 array but get only the item in the jj index
                 // so, 3d becomes 2d array
                 // and ravel flatten 2d to 1d of size (400)
-                //    this.gridActivity.GetNDArrays
-                //    var activityVect = np.ravel(this.gridActivity[:,:, jj
+                // this.gridActivity.GetNDArrays
+                // var activityVect = np.ravel(this.gridActivity[:,:, jj
                 var activityVect = np.ravel(gridActivity[Slice.All, Slice.All, jj]);
 
-                // update  the activityVect by the matWeights
+                //// update  the activityVect by the matWeights
                 activityVect = Bfunc(activityVect, matWeights);
 
-                Console.WriteLine("sabin");
+                var activityTemp = activityVect.reshape(mm, nn);
+                activityTemp += tao * (activityTemp / np.mean(activityTemp) - activityTemp);
+
+
+                activityTemp[activityTemp.GetDouble() < 0] = 0;
+
+                gridActivity[Slice.All, Slice.All, jj] = (activityTemp - np.min(activityTemp)) / (np.max(activityTemp) - np.min(activityTemp)) * 30;
             }
         }
 
@@ -72,7 +85,7 @@ namespace gridcells
                 for (int j = 0; j < matWeights.shape[1]; j++)
                 {
                     var mult = Complex.Multiply(rrr, this.speedVector);
-                    var abs = new Complex (Math.Pow(topologyAbs[i, j] - mult.Real, 2), Math.Pow(topologyAbs[i, j] - mult.Imaginary, 2)).Magnitude;
+                    var abs = new Complex (Math.Pow(topologyAbs[i, j] - mult.Real, 2), Math.Pow(topologyImg[i, j] - mult.Imaginary, 2)).Magnitude;
 
                     matWeights[i, j] = this.ii + np.exp(abs / this.sigma2) - this.tt;
                 }
@@ -84,7 +97,7 @@ namespace gridcells
         /// Perform matrix multiplaction of the activity with weight
         NDArray Bfunc(NDArray activity, NDArray matWeights)
         {  //Eq 1
-            activity += np.dot(activity, matWeights);
+            activity += np.multiply(activity, matWeights)[0];
             return activity;
         }
 
@@ -118,22 +131,6 @@ namespace gridcells
                 Tuple.Create(1.0, 0.0),
             };
 
-            //var posv = np.ndarray(xx.shape);
-
-            //for (int i = 0; i < posv.shape[0]; i++)
-            //{
-            //    for (int j = 0; j < posv.shape[1]; j++)
-            //    {
-            //        posv[i, j] = new Complex(xx[i, j].GetDouble(), yy[i, j].GetDouble());
-            //    }
-            //}
-
-
-
-                    //var posvNdArray = ;
-                    // ravel --> flatten the array to 1d
-                    // eg: np.ravel(posv) flattens 20x20 into 1d 400 length array
-                    // xx & yy are 400x400 2d array each
             var (xxAbs, yyAbs) = np.meshgrid(np.ravel(xx), np.ravel(xx));
             var (xxImg, yyImg) = np.meshgrid(np.ravel(yy), np.ravel(yy));
 
