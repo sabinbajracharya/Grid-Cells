@@ -44,7 +44,14 @@ namespace gridcells
             for (int jj = 0; jj < gridLayers; jj++)
             {
                 var rrr = new Complex(gridGain[jj], 0);
-                //var matWeights = updateWeight(self.distTri, rrr);
+                var matWeights = updateWeight(this.distTri, rrr);
+
+                // self.grid_activity[:,:,jj] == In 3d array, get all fro outer 2 array but get only the item in the jj index
+                // so, 3d becomes 2d array
+                // and ravel flatten 2d to 1d of size (400)
+                //    this.gridActivity.GetNDArrays
+                //    var activityVect = np.ravel(this.gridActivity[:,:, jj]);
+                Console.WriteLine("sabin");
             }
         }
 
@@ -53,12 +60,12 @@ namespace gridcells
             var topologyAbs = topology.Item1;
             var topologyImg = topology.Item2;
 
-            var matWeightsAbs = np.ndarray((topologyAbs.size, topologyAbs.size));
-            var matWeightsImg = np.ndarray((topologyImg.size, topologyImg.size));
+            var matWeightsAbs = np.ndarray(topologyAbs.shape);
+            var matWeightsImg = np.ndarray(topologyImg.shape);
 
-            for (int i = 0; i < matWeightsAbs.size; i++)
+            for (int i = 0; i < matWeightsAbs.shape[0]; i++)
             {
-                for (int j = 0; j < matWeightsAbs.size; j++)
+                for (int j = 0; j < matWeightsAbs.shape[1]; j++)
                 {
                     var mult = Complex.Multiply(rrr, this.speedVector);
 
@@ -69,7 +76,14 @@ namespace gridcells
             }
             return Tuple.Create(matWeightsAbs, matWeightsImg);
         }
-        
+
+
+        /// Perform matrix multiplaction of the activity with weight
+        //void Bfunc(activity, Tuple<NDArray, NDArray> matWeights) {  //Eq 1
+        //    activity += np.dot(activity, matWeights);
+        //    //return activity
+        //}
+
 
         private Tuple<NDArray, NDArray> buildTopology(int mm, int nn)
         {
@@ -80,20 +94,42 @@ namespace gridcells
             // xx && yy is 20x20 array
             var (xx, yy) = np.meshgrid(mmm, nnn);
 
-            Complex[] sdist = {
-                new Complex(0, 0),
-                new Complex(-0.5, Math.Sqrt(3) / 2),
-                new Complex(-0.5, -Math.Sqrt(3) / 2),
-                new Complex(0.5, Math.Sqrt(3) / 2),
-                new Complex(0.5, -Math.Sqrt(3) / 2),
-                new Complex(-1, 0),
-                new Complex(1, 0),
+            //Complex[] sdist = {
+            //    new Complex(0, 0),
+            //    new Complex(-0.5, Math.Sqrt(3) / 2),
+            //    new Complex(-0.5, -Math.Sqrt(3) / 2),
+            //    new Complex(0.5, Math.Sqrt(3) / 2),
+            //    new Complex(0.5, -Math.Sqrt(3) / 2),
+            //    new Complex(-1, 0),
+            //    new Complex(1, 0),
+            //};
+
+            Tuple<double, double>[] sdist = {
+                Tuple.Create(0.0, 0.0),
+                Tuple.Create(-0.5, Math.Sqrt(3) / 2),
+                Tuple.Create(-0.5, -Math.Sqrt(3) / 2),
+                Tuple.Create(0.5, Math.Sqrt(3) / 2),
+                Tuple.Create(0.5, -Math.Sqrt(3) / 2),
+                Tuple.Create(-1.0, 0.0),
+                Tuple.Create(1.0, 0.0),
             };
 
-            //var posvNdArray = ;
-            // ravel --> flatten the array to 1d
-            // eg: np.ravel(posv) flattens 20x20 into 1d 400 length array
-            // xx & yy are 400x400 2d array each
+            //var posv = np.ndarray(xx.shape);
+
+            //for (int i = 0; i < posv.shape[0]; i++)
+            //{
+            //    for (int j = 0; j < posv.shape[1]; j++)
+            //    {
+            //        posv[i, j] = new Complex(xx[i, j].GetDouble(), yy[i, j].GetDouble());
+            //    }
+            //}
+
+
+
+                    //var posvNdArray = ;
+                    // ravel --> flatten the array to 1d
+                    // eg: np.ravel(posv) flattens 20x20 into 1d 400 length array
+                    // xx & yy are 400x400 2d array each
             var (xxAbs, yyAbs) = np.meshgrid(np.ravel(xx), np.ravel(xx));
             var (xxImg, yyImg) = np.meshgrid(np.ravel(yy), np.ravel(yy));
 
@@ -120,8 +156,8 @@ namespace gridcells
                 {
                     for (int l = 0; aaa2Abs.size < nn; l++)
                     {
-                        aaa2Abs[k, l] = distMatAbs[k, l] + sdist[i].Real;
-                        aaa2Img[k, l] = distMatAbs[k, l] + sdist[i].Imaginary;
+                        aaa2Abs[k, l] = distMatAbs[k, l] + sdist[i].Item1;
+                        aaa2Img[k, l] = distMatAbs[k, l] + sdist[i].Item2;
                     }
                 }
 
